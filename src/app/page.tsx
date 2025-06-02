@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud, LinkIcon, Loader2, Eraser, Eye, AlertTriangle, FileImage } from 'lucide-react';
+import { UploadCloud, LinkIcon, Loader2, Eraser, Eye, AlertTriangle, FileImage, XIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ThreeDeeCanvas = dynamic(() => import('@/components/depth-vision/ThreeDeeCanvas'), {
@@ -38,6 +38,7 @@ export default function DepthVisionPage() {
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
 
   const { toast } = useToast();
 
@@ -172,6 +173,11 @@ export default function DepthVisionPage() {
     }
   };
 
+  const toggleImageFullscreen = () => {
+    if (originalImage) {
+      setIsImageFullscreen(!isImageFullscreen);
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground p-4 md:p-6 lg:p-8 font-body">
@@ -253,7 +259,14 @@ export default function DepthVisionPage() {
             {originalImage && (
               <div className="mt-6 space-y-2">
                 <h3 className="text-lg font-medium text-primary">Original Image Preview:</h3>
-                <div className="relative aspect-video w-full max-w-md mx-auto rounded-lg overflow-hidden border shadow-sm">
+                <div 
+                  className="relative aspect-video w-full max-w-md mx-auto rounded-lg overflow-hidden border shadow-sm cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={toggleImageFullscreen}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') toggleImageFullscreen();}}
+                  aria-label="View original image in fullscreen"
+                >
                   <Image src={originalImage} alt="Original preview" layout="fill" objectFit="contain" data-ai-hint="user uploaded content"/>
                 </div>
               </div>
@@ -304,10 +317,40 @@ export default function DepthVisionPage() {
         </Card>
       </main>
 
+      {isImageFullscreen && originalImage && (
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={toggleImageFullscreen}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fullscreen image view"
+        >
+          <button 
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+            onClick={(e) => { e.stopPropagation(); toggleImageFullscreen(); }}
+            aria-label="Close fullscreen image"
+          >
+            <XIcon className="w-8 h-8" />
+          </button>
+          <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}> {/* Prevent modal close on image click, only on backdrop */}
+            <Image 
+              src={originalImage} 
+              alt="Original image fullscreen" 
+              width={1920} // Provide large intrinsic dimensions for better quality scaling
+              height={1080}
+              objectFit="contain"
+              className="rounded-lg shadow-2xl"
+              data-ai-hint="user uploaded content fullscreen"
+            />
+          </div>
+        </div>
+      )}
+
       <footer className="text-center mt-8 md:mt-12 py-4 text-muted-foreground text-sm">
         <p>&copy; {new Date().getFullYear()} DepthVision. All rights reserved.</p>
       </footer>
     </div>
   );
+}
 
     
