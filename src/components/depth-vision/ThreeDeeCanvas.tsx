@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useRef, useEffect, useState, useCallback } from 'react';
@@ -156,7 +157,7 @@ const ThreeDeeCanvas: React.FC<ThreeDeeCanvasProps> = ({ originalImageUri, depth
     };
   }, [originalImageUri, depthMapUri, cleanupScene]);
 
-  const setPresetView = (preset: 'front' | 'top' | 'sideR' | 'sideL') | 'reset') => {
+  const setPresetView = (preset: 'front' | 'top' | 'sideR' | 'sideL' | 'reset') => {
     if (!cameraRef.current || !controlsRef.current) return;
     const distance = cameraRef.current.position.length();
     controlsRef.current.reset(); // Resets target to 0,0,0 and position
