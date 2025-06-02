@@ -8,31 +8,31 @@ body {
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --background: 210 33% 96%; /* Off-white #F0F4F8 */
+    --foreground: 210 15% 25%; /* Dark grayish blue for text */
+    --card: 0 0% 100%; /* White for cards */
+    --card-foreground: 210 15% 25%; /* Dark grayish blue for card text */
+    --popover: 0 0% 100%; /* White for popovers */
+    --popover-foreground: 210 15% 25%; /* Dark grayish blue for popover text */
+    --primary: 199 45% 50%; /* Forest green (ish) #3D84A8 */
+    --primary-foreground: 0 0% 100%; /* White for primary button text */
+    --secondary: 200 30% 90%; /* Lighter shade for secondary elements */
+    --secondary-foreground: 210 15% 25%; /* Dark grayish blue for secondary text */
+    --muted: 210 25% 85%; /* Muted gray */
+    --muted-foreground: 210 10% 45%; /* Darker muted gray for text */
+    --accent: 202 57% 30%; /* Deep blue #22577A */
+    --accent-foreground: 0 0% 100%; /* White for accent button text */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --border: 210 20% 80%; /* Border color */
+    --input: 0 0% 100%; /* Input background (white) */
+    --ring: 199 45% 50%; /* Ring color (primary) */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    --radius: 0.5rem; /* Consider 0.75rem for more rounded professional look */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -43,25 +43,25 @@ body {
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
+    --background: 222 47% 11%; /* Dark blue-gray background */
+    --foreground: 210 40% 98%; /* Light gray text */
+    --card: 222 47% 13%; /* Slightly lighter card background */
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 13%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 199 45% 50%; /* Forest green (ish) #3D84A8 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 33% 17%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217 33% 20%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 202 57% 40%; /* Slightly lighter deep blue for dark mode */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 25%;
+    --input: 217 33% 17%;
+    --ring: 199 45% 50%; /* Ring color (primary) */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
