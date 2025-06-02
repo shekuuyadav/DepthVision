@@ -71,7 +71,7 @@ const ThreeDeeCanvas: React.FC<ThreeDeeCanvasProps> = ({ originalImageUri, depth
       // Lighting
       const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.9);
       sceneRef.current.add(hemisphereLight);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6); // Adjusted intensity
       directionalLight.position.set(1, 1, 1);
       sceneRef.current.add(directionalLight);
 
@@ -105,8 +105,8 @@ const ThreeDeeCanvas: React.FC<ThreeDeeCanvasProps> = ({ originalImageUri, depth
       const material = new THREE.MeshStandardMaterial({
         map: originalTexture,
         displacementMap: depthTexture,
-        displacementScale: 0.35, 
-        displacementBias: -0.1, 
+        displacementScale: 0.15, // Reduced for a more subtle effect
+        displacementBias: -0.05,  // Adjusted for a more natural surface
         side: THREE.DoubleSide, 
       });
       meshRef.current = new THREE.Mesh(geometry, material);
