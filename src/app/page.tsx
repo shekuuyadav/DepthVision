@@ -15,7 +15,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud, LinkIcon, Loader2, Eraser, Eye, AlertTriangle, FileImage, XIcon } from 'lucide-react';
+import { UploadCloud, LinkIcon, Loader2, Eraser, Eye, AlertTriangle, FileImage, XIcon, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ThreeDeeCanvas = dynamic(() => import('@/components/depth-vision/ThreeDeeCanvas'), {
@@ -100,7 +100,7 @@ export default function DepthVisionPage() {
     setIsLoading(true);
     setProgress(10); 
     setError(null);
-    setDepthMapImage(null);
+    setDepthMapImage(null); // Clear previous depth map before generating new one
     let progressInterval: NodeJS.Timeout | null = null;
 
     try {
@@ -280,9 +280,19 @@ export default function DepthVisionPage() {
             )}
           </CardContent>
           <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t">
-            <Button onClick={handleClear} variant="outline" disabled={isLoading || isExporting} className="w-full sm:w-auto">
-              <Eraser className="mr-2 h-4 w-4" /> Clear All
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button onClick={handleClear} variant="outline" disabled={isLoading || isExporting} className="w-full sm:w-auto">
+                <Eraser className="mr-2 h-4 w-4" /> Clear All
+              </Button>
+              <Button 
+                onClick={handleGenerateDepthMap} 
+                variant="outline"
+                disabled={!originalImage || isLoading || isExporting} 
+                className="w-full sm:w-auto"
+              >
+                <RefreshCw className="mr-2 h-4 w-4" /> Regenerate
+              </Button>
+            </div>
             <Button 
               onClick={handleGenerateDepthMap} 
               disabled={!originalImage || isLoading || isExporting} 
@@ -352,5 +362,4 @@ export default function DepthVisionPage() {
     </div>
   );
 }
-
     
