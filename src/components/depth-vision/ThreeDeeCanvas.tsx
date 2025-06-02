@@ -105,9 +105,9 @@ const ThreeDeeCanvas: React.FC<ThreeDeeCanvasProps> = ({ originalImageUri, depth
       const material = new THREE.MeshStandardMaterial({
         map: originalTexture,
         displacementMap: depthTexture,
-        displacementScale: 0.35, // Adjusted for more pronounced depth
-        displacementBias: -0.1, // Added to refine surface
-        side: THREE.DoubleSide, // Render both sides
+        displacementScale: 0.35, 
+        displacementBias: -0.1, 
+        side: THREE.DoubleSide, 
       });
       meshRef.current = new THREE.Mesh(geometry, material);
       sceneRef.current!.add(meshRef.current);
