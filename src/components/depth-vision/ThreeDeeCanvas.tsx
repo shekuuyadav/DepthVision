@@ -68,11 +68,13 @@ const ThreeDeeCanvas: React.FC<ThreeDeeCanvasProps> = ({ originalImageUri, depth
       rendererRef.current.setPixelRatio(window.devicePixelRatio);
       currentMount.appendChild(rendererRef.current.domElement);
 
-      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-      sceneRef.current.add(ambientLight);
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      // Lighting
+      const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0xcccccc, 0.9);
+      sceneRef.current.add(hemisphereLight);
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
       directionalLight.position.set(1, 1, 1);
       sceneRef.current.add(directionalLight);
+
 
       controlsRef.current = new OrbitControls(cameraRef.current, rendererRef.current.domElement);
       controlsRef.current.enableDamping = true;
@@ -103,8 +105,8 @@ const ThreeDeeCanvas: React.FC<ThreeDeeCanvasProps> = ({ originalImageUri, depth
       const material = new THREE.MeshStandardMaterial({
         map: originalTexture,
         displacementMap: depthTexture,
-        displacementScale: 0.3, // Adjust for desired depth effect
-        // displacementBias: -0.15, // May need adjustment
+        displacementScale: 0.35, // Adjusted for more pronounced depth
+        displacementBias: -0.1, // Added to refine surface
         side: THREE.DoubleSide, // Render both sides
       });
       meshRef.current = new THREE.Mesh(geometry, material);
