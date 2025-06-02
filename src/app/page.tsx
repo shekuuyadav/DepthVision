@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useRef, useCallback, ChangeEvent } from 'react';
+import React, { useState, useRef, useCallback, ChangeEvent, DragEvent } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { generateDepthMap } from '@/ai/flows/depth-map-generation';
@@ -14,7 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud, LinkIcon, Loader2, Eraser, Eye, AlertTriangle } from 'lucide-react';
+import { UploadCloud, LinkIcon, Loader2, Eraser, Eye, AlertTriangle, FileImage } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const ThreeDeeCanvas = dynamic(() => import('@/components/depth-vision/ThreeDeeCanvas'), {
   ssr: false,
@@ -35,12 +37,16 @@ export default function DepthVisionPage() {
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const { toast } = useToast();
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const processFile = (file: File | null) => {
     if (file) {
+      if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
+        toast({ title: "Error", description: "Invalid file type. Please upload a PNG, JPG, WEBP, or GIF.", variant: "destructive" });
+        return;
+      }
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
         toast({ title: "Error", description: "File size exceeds 5MB limit.", variant: "destructive" });
         return;
@@ -53,6 +59,10 @@ export default function DepthVisionPage() {
       };
       reader.readAsDataURL(file);
     }
+  }
+
+  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+    processFile(event.target.files?.[0] ?? null);
   };
 
   const handleImageUrlLoad = async () => {
@@ -87,20 +97,20 @@ export default function DepthVisionPage() {
       return;
     }
     setIsLoading(true);
-    setProgress(10); // Initial progress
+    setProgress(10); 
     setError(null);
     setDepthMapImage(null);
+    let progressInterval: NodeJS.Timeout | null = null;
 
     try {
-      // Simulate progress for AI generation
-      const progressInterval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setProgress(p => (p < 90 ? p + 10 : p));
       }, 500);
 
       const input: GenerateDepthMapInput = { photoDataUri: originalImage };
       const result = await generateDepthMap(input);
       
-      clearInterval(progressInterval);
+      if (progressInterval) clearInterval(progressInterval);
       setProgress(100);
 
       if (result.depthMapDataUri) {
@@ -113,7 +123,7 @@ export default function DepthVisionPage() {
       console.error("Error generating depth map:", e);
       setError(e.message || "Failed to generate depth map.");
       toast({ title: "Error generating depth map", description: e.message || "An unknown error occurred.", variant: "destructive" });
-      clearInterval(progressInterval); // Ensure interval is cleared on error
+      if (progressInterval) clearInterval(progressInterval); 
     } finally {
       setIsLoading(false);
       setProgress(0);
@@ -128,7 +138,7 @@ export default function DepthVisionPage() {
     setIsLoading(false);
     setProgress(0);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''; // Reset file input
+      fileInputRef.current.value = ''; 
     }
     toast({ title: "Cleared", description: "Inputs and 3D view have been cleared." });
   };
@@ -136,6 +146,32 @@ export default function DepthVisionPage() {
   const handleExportLoadingChange = useCallback((loading: boolean) => {
     setIsExporting(loading);
   }, []);
+
+  const handleDragOver = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (!isLoading) setIsDragging(true);
+  };
+
+  const handleDragLeave = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event: DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+    if (isLoading) return;
+
+    const files = event.dataTransfer.files;
+    if (files && files.length > 0) {
+      processFile(files[0]);
+      event.dataTransfer.clearData();
+    }
+  };
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground p-4 md:p-6 lg:p-8 font-body">
@@ -153,31 +189,44 @@ export default function DepthVisionPage() {
         <Card className="lg:col-span-2 shadow-xl rounded-xl">
           <CardHeader>
             <CardTitle className="text-2xl font-headline text-primary">1. Upload Image</CardTitle>
-            <CardDescription>Choose an image from your device or load from a URL.</CardDescription>
+            <CardDescription>Choose an image, drag & drop, or load from a URL.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <Tabs defaultValue="upload" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="upload">
-                  <UploadCloud className="mr-2 h-4 w-4" /> Upload File
+                  <UploadCloud className="mr-2 h-4 w-4" /> Upload / Drag
                 </TabsTrigger>
                 <TabsTrigger value="url">
                   <LinkIcon className="mr-2 h-4 w-4" /> From URL
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="upload" className="mt-6">
-                <div className="space-y-2">
-                  <Label htmlFor="file-upload" className="text-base">Select Image File</Label>
+                <div 
+                  className={cn(
+                    "space-y-2 border-2 border-dashed rounded-lg p-6 transition-colors",
+                    isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/50",
+                    isLoading ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+                  )}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={() => !isLoading && fileInputRef.current?.click()}
+                >
+                  <Label htmlFor="file-upload" className={cn("text-base font-medium flex flex-col items-center justify-center space-y-2", isLoading ? "cursor-not-allowed" : "cursor-pointer")}>
+                    <FileImage className={cn("w-12 h-12", isDragging ? "text-primary" : "text-muted-foreground")} />
+                    <span>{isDragging ? "Drop image here" : "Drag & drop or click to select"}</span>
+                  </Label>
                   <Input
                     id="file-upload"
                     type="file"
                     accept="image/png, image/jpeg, image/webp, image/gif"
                     onChange={handleFileChange}
                     ref={fileInputRef}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                    className="sr-only" // Hidden, triggered by label click or drop
                     disabled={isLoading}
                   />
-                  <p className="text-xs text-muted-foreground">Max file size: 5MB. Supported: PNG, JPG, WEBP, GIF.</p>
+                  <p className="text-xs text-muted-foreground text-center">Max file size: 5MB. Supported: PNG, JPG, WEBP, GIF.</p>
                 </div>
               </TabsContent>
               <TabsContent value="url" className="mt-6">
@@ -194,7 +243,7 @@ export default function DepthVisionPage() {
                       disabled={isLoading}
                     />
                     <Button onClick={handleImageUrlLoad} disabled={isLoading || !imageUrl.trim()} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                      {isLoading && !originalImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Load
+                      {isLoading && !originalImage && imageUrl.trim() ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Load
                     </Button>
                   </div>
                 </div>
@@ -226,7 +275,7 @@ export default function DepthVisionPage() {
               disabled={!originalImage || isLoading || isExporting} 
               className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
             >
-              {isLoading && !depthMapImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" /> }
+              {isLoading && !depthMapImage && originalImage ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Eye className="mr-2 h-4 w-4" /> }
               Generate 3D View
             </Button>
           </CardFooter>
@@ -260,4 +309,5 @@ export default function DepthVisionPage() {
       </footer>
     </div>
   );
-}
+
+    
