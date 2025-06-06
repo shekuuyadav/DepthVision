@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef, useCallback, ChangeEvent, DragEvent } from 'react';
+import React, { useState, useRef, useCallback, ChangeEvent, DragEvent, useEffect } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { generateDepthMap } from '@/ai/flows/depth-map-generation';
@@ -15,7 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { UploadCloud, LinkIcon, Loader2, Eraser, Eye, AlertTriangle, FileImage, XIcon, RefreshCw } from 'lucide-react';
+import { UploadCloud, LinkIcon, Loader2, Eraser, Eye, AlertTriangle, FileImage, XIcon, RefreshCw, Expand } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from '@/lib/utils';
 
 const ThreeDeeCanvas = dynamic(() => import('@/components/depth-vision/ThreeDeeCanvas'), {
@@ -39,21 +40,23 @@ export default function DepthVisionPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [isThreeDeeFullscreen, setIsThreeDeeFullscreen] = useState(false);
+
 
   const { toast } = useToast();
 
   const processFile = (file: File | null) => {
     if (file) {
       const acceptedImageTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
-      const acceptedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+      const acceptedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime']; // Added MOV
       const acceptedTypes = [...acceptedImageTypes, ...acceptedVideoTypes];
 
-      if (!acceptedTypes.includes(file.type)) {
-        toast({ title: "Error", description: "Invalid file type. Please upload a PNG, JPG, WEBP, GIF, MP4, WEBM, or MOV.", variant: "destructive" });
+      if (!acceptedTypes.includes(file.type.toLowerCase())) { // toLowerCase for consistency
+        toast({ title: "Error", description: "Invalid file type. Please upload an image (PNG, JPG, WEBP, GIF) or video (MP4, WEBM, MOV).", variant: "destructive" });
         return;
       }
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit for all files for now
-        toast({ title: "Error", description: "File size exceeds 5MB limit.", variant: "destructive" });
+      if (file.size > 10 * 1024 * 1024) { // Increased to 10MB for potential video files
+        toast({ title: "Error", description: "File size exceeds 10MB limit.", variant: "destructive" });
         return;
       }
       const reader = new FileReader();
@@ -75,9 +78,8 @@ export default function DepthVisionPage() {
       toast({ title: "Error", description: "Please enter an image URL.", variant: "destructive" });
       return;
     }
-    // Note: fetchImageAsDataUrl currently only supports images. Video URL loading would need a different backend.
     if (!imageUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-        toast({ title: "Info", description: "Loading from URL currently only supports image files (JPEG, PNG, GIF, WEBP).", variant: "default" });
+        toast({ title: "Info", description: "Loading from URL currently only supports image files (JPEG, PNG, GIF, WEBP). Video URL support is not yet available.", variant: "default" });
         return;
     }
 
@@ -109,18 +111,18 @@ export default function DepthVisionPage() {
     }
 
     if (originalImage.startsWith('data:video')) {
-        toast({ 
-            title: "Feature Coming Soon", 
-            description: "Generating depth maps from video frames is not yet supported. Please select an image to generate a 3D view.", 
-            variant: "default" 
+        toast({
+            title: "Feature Coming Soon",
+            description: "Generating depth maps from video frames is not yet supported. Please select an image to generate a 3D view.",
+            variant: "default"
         });
-        return; 
+        return;
     }
 
     setIsLoading(true);
-    setProgress(10); 
+    setProgress(10);
     setError(null);
-    setDepthMapImage(null); 
+    setDepthMapImage(null);
     let progressInterval: NodeJS.Timeout | null = null;
 
     try {
@@ -130,7 +132,7 @@ export default function DepthVisionPage() {
 
       const input: GenerateDepthMapInput = { photoDataUri: originalImage };
       const result = await generateDepthMap(input);
-      
+
       if (progressInterval) clearInterval(progressInterval);
       setProgress(100);
 
@@ -144,7 +146,7 @@ export default function DepthVisionPage() {
       console.error("Error generating depth map:", e);
       setError(e.message || "Failed to generate depth map.");
       toast({ title: "Error generating depth map", description: e.message || "An unknown error occurred.", variant: "destructive" });
-      if (progressInterval) clearInterval(progressInterval); 
+      if (progressInterval) clearInterval(progressInterval);
     } finally {
       setIsLoading(false);
       setProgress(0);
@@ -159,7 +161,7 @@ export default function DepthVisionPage() {
     setIsLoading(false);
     setProgress(0);
     if (fileInputRef.current) {
-      fileInputRef.current.value = ''; 
+      fileInputRef.current.value = '';
     }
     toast({ title: "Cleared", description: "Inputs and 3D view have been cleared." });
   };
@@ -198,6 +200,32 @@ export default function DepthVisionPage() {
       setIsImageFullscreen(!isImageFullscreen);
     }
   };
+  
+  const toggleThreeDeeFullscreen = () => {
+    if (originalImage && depthMapImage) {
+      setIsThreeDeeFullscreen(!isThreeDeeFullscreen);
+    } else {
+      toast({
+        title: "No 3D View Available",
+        description: "Please upload an image and generate the 3D view first.",
+        variant: "default",
+      });
+    }
+  };
+
+
+  useEffect(() => {
+    const body = document.body;
+    if (isImageFullscreen || isThreeDeeFullscreen) {
+      body.style.overflow = 'hidden';
+    } else {
+      body.style.overflow = 'auto';
+    }
+    return () => {
+      body.style.overflow = 'auto'; // Cleanup on unmount
+    };
+  }, [isImageFullscreen, isThreeDeeFullscreen]);
+
 
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground p-4 md:p-6 lg:p-8 font-body">
@@ -228,7 +256,7 @@ export default function DepthVisionPage() {
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="upload" className="mt-6">
-                <div 
+                <div
                   className={cn(
                     "space-y-2 border-2 border-dashed rounded-lg p-6 transition-colors",
                     isDragging ? "border-primary bg-primary/10" : "border-border hover:border-primary/50",
@@ -252,7 +280,7 @@ export default function DepthVisionPage() {
                     className="sr-only"
                     disabled={isLoading}
                   />
-                  <p className="text-xs text-muted-foreground text-center">Max file size: 5MB. Supported: PNG, JPG, WEBP, GIF, MP4, WEBM, MOV.</p>
+                  <p className="text-xs text-muted-foreground text-center">Max file size: 10MB. Supported: PNG, JPG, WEBP, GIF, MP4, WEBM, MOV.</p>
                 </div>
               </TabsContent>
               <TabsContent value="url" className="mt-6">
@@ -282,7 +310,7 @@ export default function DepthVisionPage() {
                 <h3 className="text-lg font-medium text-primary">
                   {originalImage.startsWith('data:image') ? 'Original Image Preview:' : 'Original Video Preview:'}
                 </h3>
-                <div 
+                <div
                   className={cn(
                     "relative aspect-video w-full max-w-md mx-auto rounded-lg overflow-hidden border shadow-sm group",
                     originalImage.startsWith('data:image') ? "cursor-pointer hover:opacity-80 transition-opacity" : ""
@@ -294,18 +322,18 @@ export default function DepthVisionPage() {
                   aria-label={originalImage.startsWith('data:image') ? "View original image in fullscreen" : "Video preview"}
                 >
                   {originalImage.startsWith('data:image') ? (
-                    <Image 
-                      src={originalImage} 
-                      alt="Original preview" 
-                      layout="fill" 
-                      objectFit="contain" 
+                    <Image
+                      src={originalImage}
+                      alt="Original preview"
+                      layout="fill"
+                      objectFit="contain"
                       data-ai-hint="user uploaded content"
                     />
                   ) : originalImage.startsWith('data:video') ? (
-                    <video 
-                      src={originalImage} 
-                      controls 
-                      className="w-full h-full object-contain bg-black" // bg-black for letterboxing
+                    <video
+                      src={originalImage}
+                      controls
+                      className="w-full h-full object-contain bg-black"
                       data-ai-hint="user uploaded video"
                     >
                         Your browser does not support the video tag.
@@ -331,19 +359,19 @@ export default function DepthVisionPage() {
               <Button onClick={handleClear} variant="outline" disabled={isLoading || isExporting} className="w-full sm:w-auto">
                 <Eraser className="mr-2 h-4 w-4" /> Clear All
               </Button>
-              <Button 
-                onClick={handleGenerateDepthMap} 
+              <Button
+                onClick={handleGenerateDepthMap}
                 variant="outline"
-                disabled={!originalImage || isLoading || isExporting || (originalImage !== null && originalImage.startsWith('data:video'))} 
+                disabled={!originalImage || isLoading || isExporting || (originalImage !== null && originalImage.startsWith('data:video'))}
                 className="w-full sm:w-auto"
                 title={originalImage && originalImage.startsWith('data:video') ? "Video processing coming soon" : "Regenerate 3D view"}
               >
                 <RefreshCw className="mr-2 h-4 w-4" /> Regenerate
               </Button>
             </div>
-            <Button 
-              onClick={handleGenerateDepthMap} 
-              disabled={!originalImage || isLoading || isExporting || (originalImage !== null && originalImage.startsWith('data:video'))} 
+            <Button
+              onClick={handleGenerateDepthMap}
+              disabled={!originalImage || isLoading || isExporting || (originalImage !== null && originalImage.startsWith('data:video'))}
               className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground"
               title={originalImage && originalImage.startsWith('data:video') ? "Video processing coming soon" : "Generate 3D view"}
             >
@@ -355,8 +383,24 @@ export default function DepthVisionPage() {
 
         <Card className="lg:col-span-3 shadow-xl rounded-xl flex flex-col min-h-[400px] lg:min-h-[600px]">
           <CardHeader>
-            <CardTitle className="text-2xl font-headline text-primary">2. Explore in 3D</CardTitle>
-            <CardDescription>Interact with the generated 3D model. Use mouse/touch to rotate and zoom.</CardDescription>
+            <div className="flex justify-between items-center">
+              <div>
+                <CardTitle className="text-2xl font-headline text-primary">2. Explore in 3D</CardTitle>
+                <CardDescription>Interact with the generated 3D model. Use mouse/touch to rotate and zoom.</CardDescription>
+              </div>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" onClick={toggleThreeDeeFullscreen} disabled={!originalImage || !depthMapImage || isLoading || isExporting}>
+                      <Expand className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>View in fullscreen</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </CardHeader>
           <CardContent className="flex-grow relative p-0 overflow-hidden rounded-b-xl">
             {(isLoading && progress > 0 && originalImage && !originalImage.startsWith('data:video')) && (
@@ -377,27 +421,27 @@ export default function DepthVisionPage() {
       </main>
 
       {isImageFullscreen && originalImage && originalImage.startsWith('data:image') && (
-        <div 
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 cursor-zoom-out"
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 cursor-zoom-out"
           onClick={toggleImageFullscreen}
           role="dialog"
           aria-modal="true"
           aria-label="Fullscreen image view"
         >
-          <button 
-            className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+          <button
+            className="absolute top-4 right-4 text-white hover:text-gray-300 z-[51]"
             onClick={(e) => { e.stopPropagation(); toggleImageFullscreen(); }}
             aria-label="Close fullscreen image"
           >
             <XIcon className="w-8 h-8" />
           </button>
           <div className="relative max-w-[90vw] max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
-            <Image 
-              src={originalImage} 
-              alt="Original image fullscreen" 
-              width={1920} 
+            <Image
+              src={originalImage}
+              alt="Original image fullscreen"
+              width={1920}
               height={1080}
-              objectFit="contain"
+              style={{ objectFit: 'contain', maxWidth: '90vw', maxHeight: '90vh' }}
               className="rounded-lg shadow-2xl"
               data-ai-hint="user uploaded content fullscreen"
             />
@@ -405,10 +449,41 @@ export default function DepthVisionPage() {
         </div>
       )}
 
+      {isThreeDeeFullscreen && originalImage && depthMapImage && (
+        <div
+          className="fixed inset-0 z-[60] bg-background/90 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Fullscreen 3D view"
+        >
+          <div className="relative w-full h-full max-w-[98vw] max-h-[98vh] bg-card rounded-lg shadow-2xl overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-2 sm:p-3 border-b bg-card">
+              <h3 className="text-lg font-medium text-primary">3D View</h3>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={(e) => { e.stopPropagation(); toggleThreeDeeFullscreen(); }}
+                aria-label="Close fullscreen 3D view"
+              >
+                <XIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+              </Button>
+            </div>
+            <div className="flex-grow relative bg-muted/20">
+              <ThreeDeeCanvas
+                key={`fullscreen-canvas-${Date.now()}`} // Using Date.now() to ensure re-mount
+                originalImageUri={originalImage}
+                depthMapUri={depthMapImage}
+                onExportLoadingChange={handleExportLoadingChange}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+
       <footer className="text-center mt-8 md:mt-12 py-4 text-muted-foreground text-sm">
         <p>&copy; {new Date().getFullYear()} DepthVision. All rights reserved.</p>
       </footer>
     </div>
   );
 }
-    
