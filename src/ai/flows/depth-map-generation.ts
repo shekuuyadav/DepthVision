@@ -42,7 +42,7 @@ const depthMapPrompt = ai.definePrompt({
     {media: {url: '{{{photoDataUri}}}'}},
     {
       text:
-        'Generate a high-quality, detailed depth map for the image provided. The depth map should be grayscale, where lighter values represent closer objects and darker values represent farther objects. The depth map should also be returned as a data URI with MIME type and base64 encoding.',
+        'Generate a very high-quality, precise, and detailed depth map for the image provided. The depth map must be grayscale. Lighter shades (closer to white) must represent objects nearer to the camera, and darker shades (closer to black) must represent objects farther away. Ensure smooth transitions in depth where appropriate, but maintain sharp and accurate edges for distinct objects. The depth map should accurately capture the spatial relationships and three-dimensional structure of the scene. Return the resulting depth map as a data URI with MIME type and base64 encoding.',
     },
   ],
   config: {
@@ -63,7 +63,7 @@ const generateDepthMapFlow = ai.defineFlow(
 
       prompt: [
         {media: {url: input.photoDataUri}},
-        {text: 'Generate a high-quality, detailed depth map for the image provided. The depth map should be grayscale, where lighter values represent closer objects and darker values represent farther objects. Return the depth map as a data URI with MIME type and base64 encoding.'},
+        {text: 'Generate a very high-quality, precise, and detailed depth map for the image provided. The depth map must be grayscale. Lighter shades (closer to white) must represent objects nearer to the camera, and darker shades (closer to black) must represent objects farther away. Ensure smooth transitions in depth where appropriate, but maintain sharp and accurate edges for distinct objects. The depth map should accurately capture the spatial relationships and three-dimensional structure of the scene. Return the resulting depth map as a data URI with MIME type and base64 encoding.'},
       ],
       config: {
         responseModalities: ['TEXT', 'IMAGE'], // MUST provide both TEXT and IMAGE, IMAGE only won't work
