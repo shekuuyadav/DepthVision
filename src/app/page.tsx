@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useRef, useCallback, ChangeEvent, DragEvent, useEffect } from 'react';
+import React, { useState, useRef, useCallback, ChangeEvent, DragEvent, useEffect, KeyboardEvent } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { generateDepthMap } from '@/ai/flows/depth-map-generation';
@@ -101,6 +101,13 @@ export default function DepthVisionPage() {
     } finally {
       setIsLoading(false);
       setProgress(0);
+    }
+  };
+
+  const handleUrlInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleImageUrlLoad();
     }
   };
 
@@ -285,22 +292,16 @@ export default function DepthVisionPage() {
               </TabsContent>
               <TabsContent value="url" className="mt-6">
                 <div className="space-y-2">
-                  <Label htmlFor="image-url" className="text-base">Image URL</Label>
-                  <div className="flex space-x-2">
-                    <Input
-                      id="image-url"
-                      type="url"
-                      placeholder="https://example.com/image.png"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      className="flex-grow"
-                      disabled={isLoading}
-                    />
-                    <Button onClick={handleImageUrlLoad} disabled={isLoading || !imageUrl.trim()} className="bg-accent hover:bg-accent/90 text-accent-foreground">
-                      {isLoading && !originalImage && imageUrl.trim() ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Load
-                    </Button>
-                  </div>
-                   <p className="text-xs text-muted-foreground">Note: URL loading currently supports image files only.</p>
+                  <Input
+                    id="image-url"
+                    type="url"
+                    placeholder="type here"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    onKeyDown={handleUrlInputKeyDown}
+                    disabled={isLoading}
+                  />
+                   <p className="text-xs text-muted-foreground">Note: URL loading currently supports image files only. Press Enter to load.</p>
                 </div>
               </TabsContent>
             </Tabs>
