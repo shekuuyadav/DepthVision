@@ -74,7 +74,7 @@ export default function DepthVisionPage() {
   };
 
   const handleImageUrlLoad = async () => {
-    if (!imageUrl) {
+    if (!imageUrl || !imageUrl.trim()) {
       toast({ title: "Error", description: "Please enter an image URL.", variant: "destructive" });
       return;
     }
@@ -290,19 +290,28 @@ export default function DepthVisionPage() {
                   <p className="text-xs text-muted-foreground text-center">Max file size: 10MB. Supported: PNG, JPG, WEBP, GIF, MP4, WEBM, MOV.</p>
                 </div>
               </TabsContent>
-              <TabsContent value="url" className="mt-6">
-                <div className="space-y-2">
+              <TabsContent value="url" className="mt-6 space-y-4">
+                <div className="flex space-x-2 items-center">
                   <Input
                     id="image-url"
                     type="url"
-                    placeholder="type here"
+                    placeholder="Enter image URL"
                     value={imageUrl}
                     onChange={(e) => setImageUrl(e.target.value)}
                     onKeyDown={handleUrlInputKeyDown}
                     disabled={isLoading}
+                    className="flex-grow"
                   />
-                   <p className="text-xs text-muted-foreground">Note: URL loading currently supports image files only. Press Enter to load.</p>
+                  <Button
+                    onClick={handleImageUrlLoad}
+                    disabled={isLoading || !imageUrl.trim()}
+                    aria-label="Load image from URL"
+                  >
+                    <LinkIcon className="mr-2 h-4 w-4" />
+                    Load
+                  </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">Note: URL loading currently supports image files only. Click Load or press Enter.</p>
               </TabsContent>
             </Tabs>
 
@@ -488,3 +497,5 @@ export default function DepthVisionPage() {
     </div>
   );
 }
+
+    
