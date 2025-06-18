@@ -42,7 +42,7 @@ const depthMapPrompt = ai.definePrompt({
     {media: {url: '{{{photoDataUri}}}'}},
     {
       text:
-        'Generate a very high-quality, precise, and detailed depth map for the image provided. The depth map must be grayscale. Lighter shades (closer to white) must represent objects nearer to the camera, and darker shades (closer to black) must represent objects farther away. Ensure smooth transitions in depth where appropriate, but maintain sharp and accurate edges for distinct objects. The depth map should accurately capture the spatial relationships and three-dimensional structure of the scene. Return the resulting depth map as a data URI with MIME type and base64 encoding.',
+        'Generate a professional, production-quality, extremely high-fidelity, and meticulously detailed depth map for the image provided. The depth map must be grayscale. Lighter shades (closer to white) must represent objects nearer to the camera, and darker shades (closer to black) must represent objects farther away. Ensure exceptionally smooth and natural transitions in depth where appropriate, but maintain crisp, sharp, and highly accurate edges for distinct objects. The depth map should accurately capture all spatial relationships and the intricate three-dimensional structure of the scene, preserving fine details and avoiding any blockiness, noise, or common depth map artifacts. The output must be a clean, precise, and artifact-free representation. Return the resulting depth map as a data URI with MIME type and base64 encoding.',
     },
   ],
   config: {
@@ -63,7 +63,7 @@ const generateDepthMapFlow = ai.defineFlow(
 
       prompt: [
         {media: {url: input.photoDataUri}},
-        {text: 'Generate a very high-quality, precise, and detailed depth map for the image provided. The depth map must be grayscale. Lighter shades (closer to white) must represent objects nearer to the camera, and darker shades (closer to black) must represent objects farther away. Ensure smooth transitions in depth where appropriate, but maintain sharp and accurate edges for distinct objects. The depth map should accurately capture the spatial relationships and three-dimensional structure of the scene. Return the resulting depth map as a data URI with MIME type and base64 encoding.'},
+        {text: 'Generate a professional, production-quality, extremely high-fidelity, and meticulously detailed depth map for the image provided. The depth map must be grayscale. Lighter shades (closer to white) must represent objects nearer to the camera, and darker shades (closer to black) must represent objects farther away. Ensure exceptionally smooth and natural transitions in depth where appropriate, but maintain crisp, sharp, and highly accurate edges for distinct objects. The depth map should accurately capture all spatial relationships and the intricate three-dimensional structure of the scene, preserving fine details and avoiding any blockiness, noise, or common depth map artifacts. The output must be a clean, precise, and artifact-free representation. Return the resulting depth map as a data URI with MIME type and base64 encoding.'},
       ],
       config: {
         responseModalities: ['TEXT', 'IMAGE'], // MUST provide both TEXT and IMAGE, IMAGE only won't work
